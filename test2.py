@@ -1,31 +1,56 @@
 from scipy.integrate import odeint
-from numpy import arange
-from math import exp
+from numpy import arange, where
+from math import exp, copysign
 from matplotlib.pyplot import plot
-from numpy import where
+from Component import Component
 
+class Stage:
+  components = list()
+  def addComp(self, comp):
+    self.components.append(comp)
+    
+  def getMass(self):
+    mass = 0
+    for comp in self.components:
+      mass += comp.mass
+    return mass
+  
+class Rocket:
+  stages = list()
+  def addStage(self, stage):
+    self.stages.append(stage)
+    
+  def getMass(self):
+    mass = 0
+    for stage in self.stages:
+      mass =+ stage.getMass()
+    return mass
+  
 
 ## definitions
+
+Stage1 = Stage()
+Stage1.addComp(Component(.5,.2, 750, thrust = 50, I_sp_sea = 300, I_sp_vac = 390)) #LV909
+Stage1.addComp(Component(.5625, .2, 250, m_fuel = .22, m_ox = .27)) #FLT100
+Stage1.addComp(Component(.84, .2, 600)) #CommandPodMk1
+
+Rocket = Rocket()
+Rocket.addStage(Stage1)
+
+
 # rocket properties
-#m_dot = 16.97      # constant fuel+air mass flow rate [kg/s]
-#V_e = 2946.0      # constant rocket exhaust velocity [m/s]
+m_f0 = 490     # initial fuel+ox mass [kg]
 
-m_f0 = 2000.0     # initial fuel+ox mass [kg]
-m_s = 840.0+250+1500       # structural mass [kg]
-
-I_sp_sea = 320 # specific impulse at sea level [s]
-I_sp_vac = 370 # specific impulse at vacuum [s]
-Thrust = 200e3 # (initial?) thrust [N]
 
 
 # planet properties
 G = 6.67e-11      # grav_accitational constant [m^3/kg/s^2]
 M = 5.29e22       # mass of Kerbin [kg]
 H = 5000.0        # scale height of planet [m]
-R = 600000.0      # radius of planet [m]
+R_planet = 600000.0      # radius of planet [m]
 
 t_0 = 0 # start time [s]
-t_f = 100 # end time [s]
+t_f = 60 # end time [s]
 N = 1000 # number of time points
 
 
@@ -37,6 +62,18 @@ def func(y0, t):
   xd = y0[1] # velocity (radial)
   m_f = y0[2] # current amount of fuel left
   
+  
+  m_s = 840.0+72.5+500       # structural mass [kg]
+  
+  I_sp_sea = 300 # specific impulse at sea level [s]
+  I_sp_vac = 390 # specific impulse at vacuum [s]
+  Thrust = 50e3 # (initial?) thrust [N]
+
+  
+  area = 0.008*m_s # area (func of STRUCTURAL-ONLY mass) [m^2]
+  cd = .2 # should be mass-averaged
+
+  
   # if no fuel left, no thrust!
   T = Thrust
   if(m_f < 0):
@@ -44,7 +81,7 @@ def func(y0, t):
     T = 0
 
   # atmospheric conditions
-  pressure = 1*exp(-x/H) # atmospheric pressure [atm] NOT PASCAL!?
+  pressure = 1*exp(-x/H) # atmospheric pressure [atm]
   density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
   
   # calculate current specific impulse
@@ -55,24 +92,21 @@ def func(y0, t):
 
   # engine thrust
   accel_thrust = T/(m_s + m_f)
-
     
   # drag force (!)
-  area = 0.008*(m_s) # area (func of STRUCTURAL-ONLY mass) [m^2]
-  cd = .2 # should be mass-averaged
   F_d = 0.5*density*pow(xd, 2)*cd*area
-  accel_drag = F_d/(m_s) # is this okay???
+  accel_drag = copysign(F_d/m_s, -xd)
   
   # acceleration due to gravity
-  accel_grav = G*M/pow(R+x+74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
+  accel_grav = G*M/pow(R_planet + x + 74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
   
-  xdd = -accel_grav + accel_thrust - accel_drag # acceleration
-
+  xdd = -accel_grav + accel_thrust + accel_drag 
   return [xd, xdd, -m_dot]
 
 
 ## run the calculations
-y0 = [0.0, 0.0, m_f0] # initial dist, init vel, init fuel
+print(Rocket.getMass())
+y0 = [0.0, 0.0, 490] # initial dist, init vel, init fuel
 times = arange(t_0, t_f, (t_f-t_0)/N)
 ans = odeint(func, y0, times)
 
