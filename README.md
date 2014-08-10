@@ -3,9 +3,16 @@ kerbalcat
 
 Optimize rocket parts for getting to orbit
 
-Current limitations:
+##Current limitations:
 - single stage
-- constant thrust
+- 100% throttle
 - straight up (only Z)
 
-Verification
+##Todo
+- finish components
+- finish stages and rocket
+- 
+
+##Verification
+- Used to match well, now not so well (~7% off)
+
