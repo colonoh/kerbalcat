@@ -7,10 +7,16 @@ from numpy import where
 
 ## definitions
 # rocket properties
-m_dot = 16.97      # constant fuel+air mass flow rate [kg/s]
-V_e = 2946.0      # constant rocket exhaust velocity [m/s]
-m_f0 = 490.0     # initial fuel+ox [kg]
+#m_dot = 16.97      # constant fuel+air mass flow rate [kg/s]
+#V_e = 2946.0      # constant rocket exhaust velocity [m/s]
+
+m_f0 = 490.0     # initial fuel+ox mass [kg]
 m_s = 840.0+72.5+500       # structural mass [kg]
+
+I_sp_sea = 300 # specific impulse at sea level [s]
+I_sp_vac = 390 # specific impulse at vacuum [s]
+Thrust = 50e3 # (initial?) thrust [N]
+
 
 # planet properties
 G = 6.67e-11      # grav_accitational constant [m^3/kg/s^2]
@@ -20,7 +26,7 @@ R = 600000.0      # radius of planet [m]
 
 t_0 = 0 # start time [s]
 t_f = 60 # end time [s]
-N = 1000 # number of time points
+N = 500 # number of time points
 
 
 ## acceleration function
@@ -29,36 +35,45 @@ def func(y0, t):
   # unpack the state vector
   x = y0[0] # distance (altitude)
   xd = y0[1] # velocity (radial)
-
+  m_f = y0[2] # current amount of fuel left
   
-  # engine thrust
-  # need to account for changing mass flow rate apparently
-  m_f = m_f0 - m_dot*t # fuel left assuming CONSTANT usage from time=0 (fix later)
-  if(m_f > 0): # still have fuel left
-    accel_thrust = (m_dot*V_e)/(m_s + m_f)
-  else:
-    accel_thrust = 0
+  # if no fuel left, no thrust!
+  T = Thrust
+  if(m_f < 0):
     m_f = 0
-    
-  # drag force
-  area = 0.008*(m_s+m_f) # area (func of total mass according to KSP) [m^2]
+    T = 0
+
+  # atmospheric conditions
   pressure = 1*exp(-x/H) # atmospheric pressure [atm] NOT PASCAL!?
   density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
-  cd = .2 # should be mass-averaged
   
+  # calculate current specific impulse
+  I_sp = I_sp_vac - pressure*(I_sp_vac - I_sp_sea)
+
+  
+  # calculate the mass flow rate
+  m_dot = T/I_sp/9.82 # current mass flow rate [kg/s]
+
+  # engine thrust
+  accel_thrust = T/(m_s + m_f)
+
+    
+  # drag force (!)
+  area = 0.008*(m_s + m_f) # area (func of total mass according to KSP) [m^2]
+  cd = .2 # should be mass-averaged
   F_d = 0.5*density*pow(xd, 2)*cd*area
   accel_drag = F_d/(m_s + m_f) # is this okay???
   
-  # gravity
-  accel_grav = G*M/pow(R+x, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
+  # acceleration due to gravity
+  accel_grav = G*M/pow(R+x+74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
   
   xdd = -accel_grav + accel_thrust - accel_drag # acceleration
-  
-  return [xd, xdd]
+
+  return [xd, xdd, -m_dot]
 
 
 ## run the calculations
-y0 = [0.0, 0.0]
+y0 = [0.0, 0.0, m_f0] # initial dist, init vel, init fuel
 times = arange(t_0, t_f, (t_f-t_0)/N)
 ans = odeint(func, y0, times)
 
