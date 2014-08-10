@@ -32,6 +32,7 @@ def func(y0, t):
 
   
   # engine thrust
+  # need to account for changing mass flow rate apparently
   m_f = m_f0 - m_dot*t # fuel left assuming CONSTANT usage from time=0 (fix later)
   if(m_f > 0): # still have fuel left
     accel_thrust = (m_dot*V_e)/(m_s + m_f)
