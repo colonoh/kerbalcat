@@ -23,7 +23,7 @@ class Component:
   def __init__(self, mass, drag, cost, thrust = 0, I_sp_sea = 0, I_sp_vac = 0, m_fuel = 0, m_ox = 0):
     self.m_fuel = m_fuel*1000 # mass of fuel [kg]
     self.m_ox = m_ox*1000 # mass of oxygen [kg]
-    self.mass = mass*1000 - self.m_fuel - self.m_ox # STRUCTURAL mass [kg]
+    self.struct_mass = mass*1000 - self.m_fuel - self.m_ox # STRUCTURAL mass [kg]
     self.drag = drag # drag [-]
     self.thrust = thrust*1000 # thrust [N]
     self.I_sp_sea = I_sp_sea # specific impulse at sea level [-]

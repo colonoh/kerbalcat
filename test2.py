@@ -9,22 +9,22 @@ class Stage:
   def addComp(self, comp):
     self.components.append(comp)
     
-  def getMass(self):
-    mass = 0
+  def getStructMass(self):
+    struct_mass = 0
     for comp in self.components:
-      mass += comp.mass
-    return mass
+      struct_mass += comp.struct_mass
+    return struct_mass
   
 class Rocket:
   stages = list()
   def addStage(self, stage):
     self.stages.append(stage)
     
-  def getMass(self):
-    mass = 0
+  def getStructMass(self):
+    struct_mass = 0
     for stage in self.stages:
-      mass =+ stage.getMass()
-    return mass
+      struct_mass =+ stage.getStructMass()
+    return struct_mass
   
 
 ## definitions
@@ -61,16 +61,18 @@ def func(y0, t):
   x = y0[0] # distance (altitude)
   xd = y0[1] # velocity (radial)
   m_f = y0[2] # current amount of fuel left
+
+  # atmospheric conditions
+  pressure = 1*exp(-x/H) # atmospheric pressure [atm]
+  density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
   
-  
-  m_s = 840.0+72.5+500       # structural mass [kg]
-  
+
   I_sp_sea = 300 # specific impulse at sea level [s]
   I_sp_vac = 390 # specific impulse at vacuum [s]
   Thrust = 50e3 # (initial?) thrust [N]
 
   
-  area = 0.008*m_s # area (func of STRUCTURAL-ONLY mass) [m^2]
+  area = 0.008*Rocket.getStructMass() # area (func of STRUCTURAL-ONLY mass) [m^2]
   cd = .2 # should be mass-averaged
 
   
@@ -80,9 +82,7 @@ def func(y0, t):
     m_f = 0
     T = 0
 
-  # atmospheric conditions
-  pressure = 1*exp(-x/H) # atmospheric pressure [atm]
-  density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
+
   
   # calculate current specific impulse
   I_sp = I_sp_vac - pressure*(I_sp_vac - I_sp_sea)
@@ -91,11 +91,11 @@ def func(y0, t):
   m_dot = T/I_sp/9.82 # current mass flow rate [kg/s]
 
   # engine thrust
-  accel_thrust = T/(m_s + m_f)
+  accel_thrust = T/(Rocket.getStructMass() + m_f)
     
   # drag force (!)
   F_d = 0.5*density*pow(xd, 2)*cd*area
-  accel_drag = copysign(F_d/m_s, -xd)
+  accel_drag = copysign(F_d/Rocket.getStructMass(), -xd)
   
   # acceleration due to gravity
   accel_grav = G*M/pow(R_planet + x + 74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
@@ -105,7 +105,7 @@ def func(y0, t):
 
 
 ## run the calculations
-print(Rocket.getMass())
+print(Rocket.getStructMass())
 y0 = [0.0, 0.0, 490] # initial dist, init vel, init fuel
 times = arange(t_0, t_f, (t_f-t_0)/N)
 ans = odeint(func, y0, times)
