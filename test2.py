@@ -10,12 +10,12 @@ from numpy import where
 #m_dot = 16.97      # constant fuel+air mass flow rate [kg/s]
 #V_e = 2946.0      # constant rocket exhaust velocity [m/s]
 
-m_f0 = 490.0     # initial fuel+ox mass [kg]
-m_s = 840.0+72.5+500       # structural mass [kg]
+m_f0 = 2000.0     # initial fuel+ox mass [kg]
+m_s = 840.0+250+1500       # structural mass [kg]
 
-I_sp_sea = 300 # specific impulse at sea level [s]
-I_sp_vac = 390 # specific impulse at vacuum [s]
-Thrust = 50e3 # (initial?) thrust [N]
+I_sp_sea = 320 # specific impulse at sea level [s]
+I_sp_vac = 370 # specific impulse at vacuum [s]
+Thrust = 200e3 # (initial?) thrust [N]
 
 
 # planet properties
@@ -25,8 +25,8 @@ H = 5000.0        # scale height of planet [m]
 R = 600000.0      # radius of planet [m]
 
 t_0 = 0 # start time [s]
-t_f = 60 # end time [s]
-N = 500 # number of time points
+t_f = 100 # end time [s]
+N = 1000 # number of time points
 
 
 ## acceleration function
@@ -61,7 +61,7 @@ def func(y0, t):
   area = 0.008*(m_s) # area (func of STRUCTURAL-ONLY mass) [m^2]
   cd = .2 # should be mass-averaged
   F_d = 0.5*density*pow(xd, 2)*cd*area
-  accel_drag = F_d/(m_s + m_f) # is this okay???
+  accel_drag = F_d/(m_s) # is this okay???
   
   # acceleration due to gravity
   accel_grav = G*M/pow(R+x+74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
