@@ -50,7 +50,6 @@ def func(y0, t):
   # calculate current specific impulse
   I_sp = I_sp_vac - pressure*(I_sp_vac - I_sp_sea)
 
-  
   # calculate the mass flow rate
   m_dot = T/I_sp/9.82 # current mass flow rate [kg/s]
 
@@ -59,7 +58,7 @@ def func(y0, t):
 
     
   # drag force (!)
-  area = 0.008*(m_s + m_f) # area (func of total mass according to KSP) [m^2]
+  area = 0.008*(m_s) # area (func of total mass according to KSP) [m^2]
   cd = .2 # should be mass-averaged
   F_d = 0.5*density*pow(xd, 2)*cd*area
   accel_drag = F_d/(m_s + m_f) # is this okay???
