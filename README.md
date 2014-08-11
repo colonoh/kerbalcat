@@ -1,7 +1,7 @@
 kerbalcat
 =========
 
-Optimize rocket parts for getting to orbit
+Kerbal Space Program rocket launch simulation
 
 ##Current limitations:
 - single stage
