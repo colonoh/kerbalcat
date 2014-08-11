@@ -14,5 +14,5 @@ Optimize rocket parts for getting to orbit
 - 
 
 ##Verification
-- Used to match well, now not so well (~7% off)
+- Used to match well, now not so well (~4% off)
 
