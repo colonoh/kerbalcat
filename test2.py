@@ -1,7 +1,7 @@
 from scipy.integrate import odeint
 from numpy import arange, where
 from math import exp, copysign
-from matplotlib.pyplot import plot
+from matplotlib.pyplot import plot, xlabel, ylabel, legend
 from Component import Component
 
 class Stage:
@@ -30,16 +30,16 @@ class Rocket:
 ## definitions
 
 Stage1 = Stage()
-Stage1.addComp(Component(.5,.2, 750, thrust = 50, I_sp_sea = 300, I_sp_vac = 390)) #LV909
-Stage1.addComp(Component(.5625, .2, 250, m_fuel = .22, m_ox = .27)) #FLT100
-Stage1.addComp(Component(.84, .2, 600)) #CommandPodMk1
+Stage1.addComp(Component(1.5,.2, 950, thrust = 200, I_sp_sea = 320, I_sp_vac = 370)) #LV-T45 Liquid Fuel Engine
+Stage1.addComp(Component(4.5, .2, 1600, m_fuel = 1.8, m_ox = 2.2)) #FL-T800 Fuel Tank
+Stage1.addComp(Component(.84, .2, 600)) #Command Pod Mk1
 
 Rocket = Rocket()
 Rocket.addStage(Stage1)
 
 
 # rocket properties
-m_f0 = 490     # initial fuel+ox mass [kg]
+m_f0 = 4000     # initial fuel+ox mass [kg]
 
 
 
@@ -50,8 +50,8 @@ H = 5000.0        # scale height of planet [m]
 R_planet = 600000.0      # radius of planet [m]
 
 t_0 = 0 # start time [s]
-t_f = 60 # end time [s]
-N = 1000 # number of time points
+t_f = 230 # end time [s]
+N = 100 # number of time points
 
 
 ## acceleration function
@@ -67,12 +67,12 @@ def func(y0, t):
   density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
   
 
-  I_sp_sea = 300 # specific impulse at sea level [s]
-  I_sp_vac = 390 # specific impulse at vacuum [s]
-  Thrust = 50e3 # (initial?) thrust [N]
+  I_sp_sea = 320 # specific impulse at sea level [s]
+  I_sp_vac = 370 # specific impulse at vacuum [s]
+  Thrust = 200e3 # (initial?) thrust [N]
 
   
-  area = 0.008*Rocket.getStructMass() # area (func of STRUCTURAL-ONLY mass) [m^2]
+  area = 0.008*(Rocket.getStructMass()+m_f) # area (func of mass) [m^2]
   cd = .2 # should be mass-averaged
 
   
@@ -95,7 +95,7 @@ def func(y0, t):
     
   # drag force (!)
   F_d = 0.5*density*pow(xd, 2)*cd*area
-  accel_drag = copysign(F_d/Rocket.getStructMass(), -xd)
+  accel_drag = copysign(F_d/(Rocket.getStructMass()+m_f), -xd)
   
   # acceleration due to gravity
   accel_grav = G*M/pow(R_planet + x + 74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
@@ -105,12 +105,9 @@ def func(y0, t):
 
 
 ## run the calculations
-print(Rocket.getStructMass())
-y0 = [0.0, 0.0, 490] # initial dist, init vel, init fuel
+y0 = [0.0, 0.0, m_f0] # initial dist, init vel, init fuel
 times = arange(t_0, t_f, (t_f-t_0)/N)
 ans = odeint(func, y0, times)
-
-
 
 max_alt = max(ans[:,0])
 max_vel = max(ans[:,1])
@@ -123,3 +120,5 @@ print("Max altitude: ", max_alt, "@", max_alt_t)
 print("Max velocity: ", max_vel, "@", max_vel_t)
 
 plot(times,ans)
+xlabel("Time [s]")
+legend(('Distance', 'Velocity', 'Remaining fuel mass'), loc=7)
