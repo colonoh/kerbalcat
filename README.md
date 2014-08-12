@@ -14,6 +14,7 @@ Kerbal Space Program rocket launch simulation
 
 ##Verification
 ###Verification case #1
+```
 Command Pod Mk1
 FL-T800 Fuel Tank
 LV-T45 Liquid Fuel Engine
@@ -29,3 +30,4 @@ Max velocity:  ~1134.2m @ ~68.0s
 Percent Difference:
 Max altitude:  1.233%
 Max velocity:  0.4151%
+```
