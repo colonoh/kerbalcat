@@ -10,16 +10,12 @@ import Rocket
 ## definitions
 
 Stage1 = Stage.Stage()
-Stage1.addComp(Component(1.5,.2, 950, thrust = 200, I_sp_sea = 320, I_sp_vac = 370)) #LV-T45 Liquid Fuel Engine
-Stage1.addComp(Component(4.5, .2, 1600, m_fuel = 1.8, m_ox = 2.2)) #FL-T800 Fuel Tank
 Stage1.addComp(Component(.84, .2, 600)) #Command Pod Mk1
+Stage1.addComp(Component(4.5, .2, 1600, m_fuel = 1.8, m_ox = 2.2)) #FL-T800 Fuel Tank
+Stage1.addComp(Component(1.5,.2, 950, thrust = 200, I_sp_sea = 320, I_sp_vac = 370)) #LV-T45 Liquid Fuel Engine
 
 Rocket = Rocket.Rocket()
 Rocket.addStage(Stage1)
-
-
-# rocket properties
-m_f0 = 4000     # initial fuel+ox mass [kg]
 
 # planet properties
 G = 6.67e-11      # grav_accitational constant [m^3/kg/s^2]
@@ -34,37 +30,30 @@ N = 100 # number of time points
 
 ## acceleration function
 def func(y0, t):
-
   # unpack the state vector
   x = y0[0] # distance (altitude)
   xd = y0[1] # velocity (radial)
-  #m_f = y0[2] # current amount of fuel left
-  
-  #Rocket.stages[0].fuel = m_f
-  Rocket.stages[0].setCurrentFuelOx(y0[2])
+  Rocket.stages[0].setCurrentFuelOx(y0[2]) # the amount of stage fuel [kg]
 
   # atmospheric conditions
-  pressure = 1*exp(-x/H) # atmospheric pressure [atm]
-  density = 1.2230948554874*pressure # atmospheric density [kg/m^3]
+  pressure = 1.0 * exp(-x / H) # atmospheric pressure [atm] (the 1.0 is pressure at sea level)
+  density = 1.2230948554874 * pressure # atmospheric density [kg/m^3]
   
-
-  # engine thrust
-  accel_thrust = Rocket.stages[0].getCurrentThrust() / Rocket.getTotalMass()
+  accel_thrust = Rocket.stages[0].getCurrentThrust() / Rocket.getTotalMass() # engine thrust
+  
+  accel_grav = G * M / pow(R_planet + x, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
     
   # drag force (!)
   F_d = 0.5*density*pow(xd, 2) * Rocket.getCd() * Rocket.getArea()
-  accel_drag = copysign(F_d/Rocket.getTotalMass(), -xd)
+  accel_drag = copysign(F_d / Rocket.getTotalMass(), -xd) # drag should always be opposite of velocity
   
-  # acceleration due to gravity
-  accel_grav = G*M/pow(R_planet + x + 74, 2) # accel due to gravity based on dist from Kerbin surface (if going straight out)
-  
-  xdd = -accel_grav + accel_thrust + accel_drag 
+  xdd = -accel_grav + accel_thrust + accel_drag # total acceleration
   
   return [xd, xdd, -Rocket.stages[0].getMassFlowRate(pressure)] # velocity, acceleration, mass flow rate (m_dot)
 
 
 ## run the calculations
-y0 = [0.0, 0.0, m_f0] # initial dist, init vel, init fuel
+y0 = [74.0, 0.0, Rocket.stages[0].getCurrentFuelOx()] # initial alt, init vel, init fuel
 times = arange(t_0, t_f, (t_f-t_0)/N) # array of time points
 ans = odeint(func, y0, times)
 
