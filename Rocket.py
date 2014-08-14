@@ -1,14 +1,21 @@
 class Rocket:
-  stages = list()
+  def __init__(self):
+    self.stages = list()
+  
   def addStage(self, stage):
     self.stages.append(stage)
     
+  def delStage(self):
+    del self.stages[0]
+
   # get the rocket's total structural mass [kg]
   def getStructMass(self):
     struct_mass = 0.0
+    
     for stage in self.stages:
       for comp in stage.components:
         struct_mass += comp.struct_mass
+    
     return struct_mass
     
   # current structral and fuel/ox mass of the entire rocket
@@ -19,8 +26,6 @@ class Rocket:
       mass += stage.getCurrentFuelOx()
     
     return mass
-    
-    
     
   # rocket's mass averaged coefficient of drag
   def getCd(self):
@@ -39,6 +44,7 @@ class Rocket:
   # drag area is based on mass in KSP
   def getArea(self):
     fuel_mass = 0.0
+    
     for stage in self.stages:
       fuel_mass += stage.getCurrentFuelOx()
     
